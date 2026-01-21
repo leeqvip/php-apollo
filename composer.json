@@ -1,0 +1,39 @@
+{
+    "name": "leeqvip/php-apollo",
+    "description": "Apollo PHP Client",
+    "keywords": [
+        "apollo",
+        "php",
+        "client"
+    ],
+    "authors": [
+        {
+            "name": "leeqvip",
+            "email": "leeqvip@gmail.com"
+        }
+    ],
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0",
+        "guzzlehttp/guzzle": "^7.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "php-coveralls/php-coveralls": "^2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Leeqvip\\Apollo\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit tests",
+        "test-coverage": "phpunit --coverage-clover clover.xml tests"
+    }
+}
