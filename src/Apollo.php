@@ -128,6 +128,17 @@ class Apollo
     }
 
     /**
+     *
+     * Get config instance
+     *
+     * @return Config
+     */
+    public function getConfig(): Config
+    {
+        return $this->config;
+    }
+
+    /**
      * Get configuration
      *
      * @param string $key Configuration key
@@ -239,10 +250,14 @@ class Apollo
     /**
      * Disable cloning
      */
-    public function __clone(): void {}
+    public function __clone(): void
+    {
+    }
 
     /**
      * Disable serialization
      */
-    public function __wakeup(): void {}
+    public function __wakeup(): void
+    {
+    }
 }
