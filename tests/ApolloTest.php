@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Leeqvip\Apollo\Apollo;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Apollo测试

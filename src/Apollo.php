@@ -55,6 +55,8 @@ class Apollo
      * Constructor
      *
      * @param array<string, mixed> $options Configuration parameters
+     * @throws ApolloException
+     * @throws GuzzleException
      */
     protected function __construct(array $options)
     {
@@ -74,6 +76,7 @@ class Apollo
      *
      * @param array<string, mixed> $options Configuration parameters
      * @return Apollo
+     * @throws ApolloException|GuzzleException
      */
     public static function getInstance(array $options = []): Apollo
     {
@@ -85,22 +88,38 @@ class Apollo
 
     /**
      * Initialize
-     *
      * @return void
+     * @throws ApolloException|GuzzleException
      */
-    protected function init(): void
+    private function init(): void
     {
         // Ensure cache directory exists
         if (!is_dir($this->cacheDir)) {
             mkdir($this->cacheDir, 0755, true);
         }
+        $this->loadOrPull();
     }
 
-    public function load(): void
+    /**
+     * @throws GuzzleException
+     * @throws ApolloException
+     */
+    private function loadOrPull(): void
     {
-        // Load local cache
-        $this->loadCache();
+        // Load cache
+        if ($this->loadCache()) {
+            return;
+        }
 
+        $this->pullConfigs();
+    }
+
+    /**
+     * @throws ApolloException
+     * @throws GuzzleException
+     */
+    public function pull(): void
+    {
         $this->pullConfigs();
     }
 
@@ -111,7 +130,7 @@ class Apollo
      * @throws ApolloException
      * @throws GuzzleException
      */
-    public function pullConfigs(): void
+    protected function pullConfigs(): void
     {
         foreach ($this->namespaces as $namespace) {
             $configString = $this->client->getConfig($namespace);
@@ -157,9 +176,9 @@ class Apollo
      * @param string|null $namespace Namespace
      * @return array<string, mixed>
      */
-    public function getAll(?string $namespace = null): array
+    public function all(?string $namespace = null): array
     {
-        return $this->config->getAll(empty($namespace) ? $this->defaultNamespace : $namespace);
+        return $this->config->all(empty($namespace) ? $this->defaultNamespace : $namespace);
     }
 
     /**
@@ -203,24 +222,25 @@ class Apollo
     }
 
     /**
-     * Load local cache
+     * Load from local cache
      *
-     * @return void
+     * @return bool
      */
-    protected function loadCache(): void
+    protected function loadCache(): bool
     {
         foreach ($this->namespaces as $namespace) {
             $cacheFile = $this->getCacheFile($namespace);
-            if (file_exists($cacheFile)) {
-                $content = file_get_contents($cacheFile);
-                if ($content) {
-                    $config = json_decode($content, true);
-                    if ($config) {
-                        $this->config->setBatch($config, $namespace);
-                    }
-                }
+            if (!file_exists($cacheFile)) {
+                return false;
             }
+            $config = require $cacheFile;
+            if (!is_array($config)) {
+                return false;
+            }
+            $this->config->setBatch($config, $namespace);
         }
+
+        return true;
     }
 
     /**
@@ -233,7 +253,22 @@ class Apollo
     protected function saveCache(string $namespace, array $config): void
     {
         $cacheFile = $this->getCacheFile($namespace);
-        file_put_contents($cacheFile, json_encode($config, JSON_UNESCAPED_UNICODE));
+        $content = "<?php\n\nreturn " . var_export($config, true) . ";\n";
+        file_put_contents($cacheFile, $content);
+    }
+
+    /**
+     * @param string $namespace
+     * @return void
+     */
+    public function removeCache(string $namespace = '*'): void
+    {
+        foreach ($this->namespaces as $namespace) {
+            $cacheFile = $this->getCacheFile($namespace);
+            if (file_exists($cacheFile)) {
+                unlink($cacheFile);
+            }
+        }
     }
 
     /**
@@ -244,7 +279,7 @@ class Apollo
      */
     protected function getCacheFile(string $namespace): string
     {
-        return $this->cacheDir . '/' . md5($this->options['app_id'] . '_' . $namespace) . '.json';
+        return $this->cacheDir . '/' . md5($this->options['app_id'] . '_' . $namespace) . '.php';
     }
 
     /**

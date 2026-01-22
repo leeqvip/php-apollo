@@ -6,7 +6,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Response;
 use Leeqvip\Apollo\Client;
 use Leeqvip\Apollo\Exceptions\ApolloException;
-use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
 {
@@ -20,16 +19,6 @@ class ClientTest extends TestCase
      */
     public function testGetConfigImmediately(): void
     {
-        Client::fake('*', [], new Response(200, [], json_encode([
-            'appId' => $this->appId,
-            'cluster' => $this->cluster,
-            'namespaceName' => $this->cluster,
-            'configurations' => [
-                'APP_ENV' => 'default',
-                'APP_DEBUG' => 'false',
-            ],
-            'releaseKey' => '20260121165210-970a2ab79cbd44e7'
-        ])));
 
         $client = new Client([
             'app_id' => $this->appId,
@@ -48,6 +37,7 @@ class ClientTest extends TestCase
             'APP_ENV' => 'default',
             'APP_DEBUG' => 'false',
         ]);
+        Client::fakeClear();
         Client::fake('*', [], new Response(200, [], $body));
 
         $client = new Client([
@@ -62,6 +52,7 @@ class ClientTest extends TestCase
 
     public function testFakeGet(): void
     {
+        Client::fakeClear();
         Client::fake('*', [], new Response(200, [], '{}'));
         $response = Client::fakeGet('/configs/default');
         $this->assertEquals(200, $response->getStatusCode());

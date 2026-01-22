@@ -8,11 +8,14 @@ trait FakeClient
 {
     protected static array $fakes = [];
 
+    public static function fakeClear(): void
+    {
+        self::$fakes = [];
+    }
+
     public static function fake(string $url, array $options, ResponseInterface $response): void
     {
-        self::$fakes = [
-            $url => $response,
-        ];
+        self::$fakes[$url] = $response;
     }
 
     public static function fakeGet(string $url, array $options = []): ?ResponseInterface

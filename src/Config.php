@@ -89,7 +89,7 @@ class Config
      * @param string $namespace Namespace
      * @return array<string, mixed>
      */
-    public function getAll(string $namespace = 'application'): array
+    public function all(string $namespace = 'application'): array
     {
         return $this->configs[$namespace] ?? [];
     }
